@@ -1,0 +1,128 @@
+// Skema database aplikasi absensi magang.
+// Nama model memakai Bahasa Indonesia, nama tabel dan kolom di database memakai snake_case.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Peran {
+  ADMIN
+  PESERTA
+}
+
+// Status masuk ditentukan sekali saat check-in, dari jam server.
+enum StatusMasuk {
+  TEPAT_WAKTU
+  TERLAMBAT
+  HARI_LIBUR
+}
+
+enum JenisIzin {
+  IZIN
+  SAKIT
+}
+
+enum StatusPengajuan {
+  MENUNGGU
+  DISETUJUI
+  DITOLAK
+}
+
+model Pengguna {
+  id              String    @id @default(cuid())
+  nama            String
+  email           String    @unique
+  kataSandiHash   String    @map("kata_sandi_hash")
+  peran           Peran
+  /// Posisi kerja peserta, misalnya "Frontend Developer". Beda dengan `peran`, yang menentukan hak akses.
+  role            String?
+  kampus          String?
+  tanggalMulai    DateTime? @map("tanggal_mulai") @db.Date
+  tanggalSelesai  DateTime? @map("tanggal_selesai") @db.Date
+  aktif           Boolean   @default(true)
+  wajibGantiSandi Boolean   @default(false) @map("wajib_ganti_sandi")
+  // Hanya akun bertanda demo yang boleh dimasuki lewat tombol demo di halaman login.
+  akunDemo        Boolean   @default(false) @map("akun_demo")
+  dibuatPada      DateTime  @default(now()) @map("dibuat_pada") @db.Timestamptz(3)
+  diperbaruiPada  DateTime  @updatedAt @map("diperbarui_pada") @db.Timestamptz(3)
+
+  absensi          Absensi[]
+  pengajuanIzin    PengajuanIzin[]    @relation("PemohonIzin")
+  izinDitinjau     PengajuanIzin[]    @relation("PeninjauIzin")
+  pengajuanKoreksi PengajuanKoreksi[] @relation("PemohonKoreksi")
+  koreksiDitinjau  PengajuanKoreksi[] @relation("PeninjauKoreksi")
+
+  @@map("pengguna")
+}
+
+model Absensi {
+  id             String      @id @default(cuid())
+  penggunaId     String      @map("pengguna_id")
+  // Tanggal kalender WIB, disimpan terpisah dari jam_masuk yang tersimpan dalam UTC.
+  tanggal        DateTime    @db.Date
+  jamMasuk       DateTime    @map("jam_masuk") @db.Timestamptz(3)
+  jamPulang      DateTime?   @map("jam_pulang") @db.Timestamptz(3)
+  statusMasuk    StatusMasuk @map("status_masuk")
+  menitTerlambat Int         @default(0) @map("menit_terlambat")
+  logbook        String?
+  dikoreksi      Boolean     @default(false)
+  dibuatPada     DateTime    @default(now()) @map("dibuat_pada") @db.Timestamptz(3)
+  diperbaruiPada DateTime    @updatedAt @map("diperbarui_pada") @db.Timestamptz(3)
+
+  pengguna Pengguna @relation(fields: [penggunaId], references: [id], onDelete: Cascade)
+
+  // Satu absensi per peserta per hari. Dijaga database, bukan hanya oleh tombol di layar.
+  @@unique([penggunaId, tanggal])
+  @@index([tanggal])
+  @@map("absensi")
+}
+
+model PengajuanIzin {
+  id             String          @id @default(cuid())
+  penggunaId     String          @map("pengguna_id")
+  jenis          JenisIzin
+  tanggalMulai   DateTime        @map("tanggal_mulai") @db.Date
+  tanggalSelesai DateTime        @map("tanggal_selesai") @db.Date
+  alasan         String
+  status         StatusPengajuan @default(MENUNGGU)
+  catatanAdmin   String?         @map("catatan_admin")
+  ditinjauOlehId String?         @map("ditinjau_oleh_id")
+  ditinjauPada   DateTime?       @map("ditinjau_pada") @db.Timestamptz(3)
+  dibuatPada     DateTime        @default(now()) @map("dibuat_pada") @db.Timestamptz(3)
+
+  pengguna     Pengguna  @relation("PemohonIzin", fields: [penggunaId], references: [id], onDelete: Cascade)
+  ditinjauOleh Pengguna? @relation("PeninjauIzin", fields: [ditinjauOlehId], references: [id], onDelete: SetNull)
+
+  @@index([penggunaId, status])
+  @@index([tanggalMulai, tanggalSelesai])
+  @@map("pengajuan_izin")
+}
+
+model PengajuanKoreksi {
+  id              String          @id @default(cuid())
+  penggunaId      String          @map("pengguna_id")
+  // Dicocokkan ke absensi lewat (pengguna_id, tanggal), karena kalau lupa check-in barisnya belum ada.
+  tanggal         DateTime        @db.Date
+  jamMasukUsulan  DateTime?       @map("jam_masuk_usulan") @db.Timestamptz(3)
+  jamPulangUsulan DateTime?       @map("jam_pulang_usulan") @db.Timestamptz(3)
+  alasan          String
+  status          StatusPengajuan @default(MENUNGGU)
+  catatanAdmin    String?         @map("catatan_admin")
+  ditinjauOlehId  String?         @map("ditinjau_oleh_id")
+  ditinjauPada    DateTime?       @map("ditinjau_pada") @db.Timestamptz(3)
+  dibuatPada      DateTime        @default(now()) @map("dibuat_pada") @db.Timestamptz(3)
+
+  pengguna     Pengguna  @relation("PemohonKoreksi", fields: [penggunaId], references: [id], onDelete: Cascade)
+  ditinjauOleh Pengguna? @relation("PeninjauKoreksi", fields: [ditinjauOlehId], references: [id], onDelete: SetNull)
+
+  // Index unik sebagian "satu koreksi menunggu per tanggal" ditulis manual di file migrasi,
+  // karena Prisma belum bisa menuliskan WHERE pada index.
+  @@index([penggunaId, tanggal])
+  @@index([status])
+  @@map("pengajuan_koreksi")
+}
