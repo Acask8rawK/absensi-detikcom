@@ -135,7 +135,6 @@ Jam masuk (09.00) dan toleransi (15 menit) disimpan sebagai konfigurasi di kode,
 | Verifikasi akun? | Tidak ada pendaftaran publik, jadi tidak perlu verifikasi email. Admin membuat akun dengan kata sandi sementara, dan peserta wajib menggantinya saat login pertama. |
 | Kenapa tidak Supabase Auth atau Auth.js? | Keduanya bisa. Sesi buatan sendiri dipilih karena hanya sekitar 100 baris, tanpa ketergantungan tambahan, dan setiap barisnya bisa dijelaskan di interview. |
 
-Alternatif yang dipertimbangkan: Laravel + MySQL (mungkin dekat dengan stack detik, tapi kurang lancar dipakai dan deploy lebih lama), FastAPI + React (dua aplikasi dan dua deploy, terlalu lama untuk tenggat ini).
 
 ---
 
