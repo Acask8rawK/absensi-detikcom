@@ -75,7 +75,7 @@ export function PesanGalat({ hasil, className }: { hasil: HasilAksi; className?:
 
 export function Kolom({ label, htmlFor, petunjuk, children }: { label: string; htmlFor: string; petunjuk?: string; children: React.ReactNode }) {
   return (
-    <div className="grid gap-1.5">
+    <div className="grid min-w-0 content-start gap-1.5">
       <label htmlFor={htmlFor} className="text-sm font-medium">
         {label}
       </label>

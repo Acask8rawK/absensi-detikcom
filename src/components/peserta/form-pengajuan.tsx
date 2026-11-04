@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { ajukanIzin, ajukanKoreksi, batalkanIzin, batalkanKoreksi } from "@/actions/pengajuan";
 import { Kolom, PesanGalat, pertahankanIsian, TombolKirim, useNotifikasiHasil } from "@/components/form";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { InputJam, InputTanggal } from "@/components/input-waktu";
 import { Textarea } from "@/components/ui/textarea";
 import { MIN_ALASAN } from "@/lib/konfigurasi";
 
@@ -28,10 +28,10 @@ export function FormIzin({ hariIni, batasMundur }: { hariIni: string; batasMundu
       </Kolom>
       <div className="grid grid-cols-2 gap-3">
         <Kolom label="Dari tanggal" htmlFor="mulai">
-          <Input id="mulai" name="mulai" type="date" min={batasMundur} defaultValue={isian.mulai ?? hariIni} required className="h-10" />
+          <InputTanggal id="mulai" name="mulai" min={batasMundur} defaultValue={isian.mulai ?? hariIni} required className="h-10" />
         </Kolom>
         <Kolom label="Sampai tanggal" htmlFor="selesai">
-          <Input id="selesai" name="selesai" type="date" min={batasMundur} defaultValue={isian.selesai ?? hariIni} required className="h-10" />
+          <InputTanggal id="selesai" name="selesai" min={batasMundur} defaultValue={isian.selesai ?? hariIni} required className="h-10" />
         </Kolom>
       </div>
       <Kolom label="Alasan" htmlFor="alasan-izin" petunjuk={`Minimal ${MIN_ALASAN} karakter. Admin membaca ini sebelum memutuskan.`}>
@@ -52,14 +52,14 @@ export function FormKoreksi({ tanggalAwal, batasMundur, kemarin }: { tanggalAwal
   return (
     <form ref={form} action={aksi} className="grid gap-4">
       <Kolom label="Tanggal yang dikoreksi" htmlFor="tanggal-koreksi" petunjuk="Maksimal 7 hari ke belakang.">
-        <Input id="tanggal-koreksi" name="tanggal" type="date" min={batasMundur} max={kemarin} defaultValue={isian.tanggal ?? tanggalAwal} required className="h-10" />
+        <InputTanggal id="tanggal-koreksi" name="tanggal" min={batasMundur} max={kemarin} defaultValue={isian.tanggal ?? tanggalAwal} required className="h-10" />
       </Kolom>
       <div className="grid grid-cols-2 gap-3">
         <Kolom label="Jam masuk" htmlFor="jamMasuk" petunjuk="Kosongkan jika sudah benar.">
-          <Input id="jamMasuk" name="jamMasuk" type="time" defaultValue={isian.jamMasuk} className="h-10" />
+          <InputJam id="jamMasuk" name="jamMasuk" defaultValue={isian.jamMasuk} className="h-10" />
         </Kolom>
         <Kolom label="Jam pulang" htmlFor="jamPulang" petunjuk="Isi jika lupa check-out.">
-          <Input id="jamPulang" name="jamPulang" type="time" defaultValue={isian.jamPulang} className="h-10" />
+          <InputJam id="jamPulang" name="jamPulang" defaultValue={isian.jamPulang} className="h-10" />
         </Kolom>
       </div>
       <Kolom label="Alasan" htmlFor="alasan-koreksi" petunjuk={`Minimal ${MIN_ALASAN} karakter.`}>

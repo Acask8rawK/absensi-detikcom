@@ -7,6 +7,7 @@ import { bacaPeriode, PERIODE } from "@/lib/periode";
 import { formatDurasi, formatMenitHari, formatTanggalPendek, tanggalWIB } from "@/lib/waktu";
 import { cn } from "@/lib/utils";
 import { GulirSamping } from "@/components/gulir-samping";
+import { InputTanggal } from "@/components/input-waktu";
 import { Inisial, KepalaKolom } from "@/components/rapor";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,18 +61,19 @@ export default async function Laporan({ searchParams }: PageProps<"/admin/lapora
             </Link>
           ))}
         </nav>
-        <form className="flex flex-wrap items-end gap-2">
-          <label className="grid gap-1 text-xs font-medium">
+        {/* Di HP: Dari dan Sampai berdampingan, lalu Nama dan tombol Terapkan. */}
+        <form className="grid w-full grid-cols-2 items-end gap-2 sm:flex sm:w-auto sm:flex-wrap">
+          <label className="grid min-w-0 gap-1 text-xs font-medium sm:w-40">
             Dari
-            <Input type="date" name="dari" defaultValue={periode.dari} max={hariIni} className="h-9" />
+            <InputTanggal name="dari" defaultValue={periode.dari} max={hariIni} className="h-9" />
           </label>
-          <label className="grid gap-1 text-xs font-medium">
+          <label className="grid min-w-0 gap-1 text-xs font-medium sm:w-40">
             Sampai
-            <Input type="date" name="sampai" defaultValue={periode.sampai} max={hariIni} className="h-9" />
+            <InputTanggal name="sampai" defaultValue={periode.sampai} max={hariIni} className="h-9" />
           </label>
-          <label className="grid gap-1 text-xs font-medium">
+          <label className="grid min-w-0 gap-1 text-xs font-medium sm:w-40">
             Nama
-            <Input name="cari" defaultValue={cari} placeholder="Semua peserta" className="h-9 w-40" />
+            <Input name="cari" defaultValue={cari} placeholder="Semua peserta" className="h-9" />
           </label>
           <button type="submit" className={buttonVariants({ variant: "outline", className: "h-9" })}>
             Terapkan

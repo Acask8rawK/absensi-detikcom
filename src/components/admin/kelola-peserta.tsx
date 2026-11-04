@@ -7,6 +7,7 @@ import { tambahPeserta, ubahStatusPeserta } from "@/actions/admin";
 import { Kolom, PesanGalat, pertahankanIsian, TombolKirim } from "@/components/form";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { InputTanggal } from "@/components/input-waktu";
 import { Input } from "@/components/ui/input";
 
 export function TambahPeserta({ hariIni }: { hariIni: string }) {
@@ -98,7 +99,7 @@ function IsiTambahPeserta({ hariIni, tutup }: { hariIni: string; tutup: () => vo
           </Kolom>
         </div>
         <Kolom label="Mulai magang" htmlFor="tanggalMulai">
-          <Input id="tanggalMulai" name="tanggalMulai" type="date" defaultValue={isian.tanggalMulai ?? hariIni} required className="h-10" />
+          <InputTanggal id="tanggalMulai" name="tanggalMulai" defaultValue={isian.tanggalMulai ?? hariIni} required className="h-10" />
         </Kolom>
         <PesanGalat hasil={hasil} />
         <TombolKirim className="h-10">Simpan peserta</TombolKirim>

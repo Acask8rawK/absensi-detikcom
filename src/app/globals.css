@@ -209,3 +209,34 @@
   background-repeat: no-repeat;
   background-attachment: local, scroll;
 }
+
+/*
+ * Kolom tanggal dan jam (komponen InputTanggal / InputJam).
+ * Safari iOS memberi input tanggal lebar minimum bawaan sehingga keluar dari
+ * kolomnya, dan isinya ditaruh di tengah. appearance: none + min-width: 0
+ * membuatnya patuh pada lebar layout seperti input biasa.
+ */
+.input-waktu {
+  -webkit-appearance: none;
+  appearance: none;
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+.input-waktu::-webkit-date-and-time-value {
+  text-align: left;
+  min-height: 1.5em;
+}
+/* Ikon bawaan Chrome dibuat tak terlihat tapi tetap menutupi ikon kita,
+   jadi menekan ikon tetap membuka kalender atau pilihan jam. */
+.input-waktu::-webkit-calendar-picker-indicator {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 2.5rem;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+}
