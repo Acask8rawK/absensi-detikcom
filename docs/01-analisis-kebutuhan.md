@@ -118,7 +118,7 @@ Jam masuk (09.00) dan toleransi (15 menit) disimpan sebagai konfigurasi di kode,
 | Database | PostgreSQL | Mendukung constraint unik, tipe tanggal, dan agregasi untuk laporan |
 | ORM | Prisma | Skema tertulis jelas, migrasi tercatat, tipe otomatis |
 | Tampilan | Tailwind CSS + komponen shadcn/ui | Tampilan bersih dan konsisten tanpa menulis CSS dari nol |
-| Autentikasi | Sesi buatan sendiri: bcrypt + JWT di cookie HttpOnly | Sederhana, mudah dijelaskan baris per baris, cukup untuk dua peran |
+| Autentikasi | Sesi buatan sendiri: bcrypt + JWT di cookie HttpOnly | Sederhana, cukup untuk dua peran |
 | Hosting | Vercel (aplikasi) + Postgres terkelola (Supabase atau Neon) | Gratis, deploy dari Git, link langsung bisa dibagikan |
 
 | Grafik | shadcn/ui Chart (di atas Recharts) | Komponen grafik yang tampilannya serasi dengan komponen lain, dan mengikuti mode gelap |
@@ -135,7 +135,6 @@ Jam masuk (09.00) dan toleransi (15 menit) disimpan sebagai konfigurasi di kode,
 | Verifikasi akun? | Tidak ada pendaftaran publik, jadi tidak perlu verifikasi email. Admin membuat akun dengan kata sandi sementara, dan peserta wajib menggantinya saat login pertama. |
 | Kenapa tidak Supabase Auth atau Auth.js? | Keduanya bisa. Sesi buatan sendiri dipilih karena hanya sekitar 100 baris, tanpa ketergantungan tambahan, dan setiap barisnya bisa dijelaskan di interview. |
 
-Alternatif yang dipertimbangkan: Laravel + MySQL (mungkin dekat dengan stack detik, tapi kurang lancar dipakai dan deploy lebih lama), FastAPI + React (dua aplikasi dan dua deploy, terlalu lama untuk tenggat ini).
 
 ---
 
