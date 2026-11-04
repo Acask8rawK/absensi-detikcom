@@ -6,6 +6,7 @@ import { dataLaporan } from "@/lib/data";
 import { bacaPeriode, PERIODE } from "@/lib/periode";
 import { formatDurasi, formatMenitHari, formatTanggalPendek, tanggalWIB } from "@/lib/waktu";
 import { cn } from "@/lib/utils";
+import { GulirSamping } from "@/components/gulir-samping";
 import { Inisial, KepalaKolom } from "@/components/rapor";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,8 +82,8 @@ export default async function Laporan({ searchParams }: PageProps<"/admin/lapora
       {baris.length === 0 ? (
         <p className="rounded-[10px] border border-dashed p-8 text-center text-sm text-muted-foreground">Tidak ada peserta yang cocok dengan filter ini.</p>
       ) : (
-        <div className="overflow-x-auto rounded-[10px] border bg-card">
-          <table className="w-full min-w-[900px] border-collapse text-sm">
+        <GulirSamping className="rounded-[10px] border bg-card">
+          <table className="w-full min-w-[940px] border-collapse text-sm">
             <thead>
               <tr className="border-b">
                 {/* Kolom nama menempel di kiri saat tabel digeser di layar sempit. */}
@@ -126,14 +127,14 @@ export default async function Laporan({ searchParams }: PageProps<"/admin/lapora
                       </td>
                     );
                   })}
-                  <td className="border-l px-3 text-right tabular-nums">{b.rekap.rataJamMasuk !== null ? formatMenitHari(b.rekap.rataJamMasuk) : "–"}</td>
-                  <td className="border-l px-3 text-right tabular-nums">{formatDurasi(b.rekap.totalMenitKerja)}</td>
+                  <td className="border-l px-3 text-right whitespace-nowrap tabular-nums">{b.rekap.rataJamMasuk !== null ? formatMenitHari(b.rekap.rataJamMasuk) : "–"}</td>
+                  <td className="border-l px-3 text-right whitespace-nowrap tabular-nums">{formatDurasi(b.rekap.totalMenitKerja)}</td>
                   <td className="border-l px-4 text-right font-semibold tabular-nums">{b.rekap.persenKehadiran !== null ? `${b.rekap.persenKehadiran}%` : "–"}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
+        </GulirSamping>
       )}
       <p className="text-xs text-muted-foreground">
         Kehadiran = hari hadir ÷ hari kerja. Hari kerja dihitung Senin–Jumat sejak tanggal mulai magang; izin dan sakit tetap dihitung sebagai hari kerja. File CSV memakai

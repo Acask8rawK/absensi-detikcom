@@ -5,9 +5,11 @@ import { wajibPeran } from "@/lib/auth";
 import { dataDaftarPeserta } from "@/lib/data";
 import { formatJam, formatTanggalPendek, tanggalWIB } from "@/lib/waktu";
 import { TambahPeserta, TombolStatusPeserta } from "@/components/admin/kelola-peserta";
+import { GulirSamping } from "@/components/gulir-samping";
 import { Inisial, KepalaKolom } from "@/components/rapor";
 import { LencanaStatus } from "@/components/status";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Peserta" };
 
@@ -43,12 +45,13 @@ export default async function DaftarPeserta({ searchParams }: PageProps<"/admin/
           {cari ? `Tidak ada peserta bernama "${cari}".` : "Belum ada peserta. Tambahkan peserta pertama dengan tombol di atas."}
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-[10px] border bg-card">
-          <table className="w-full min-w-[760px] text-sm">
+        <GulirSamping className="rounded-[10px] border bg-card">
+          <table className="w-full min-w-[880px] text-sm">
             <thead>
               <tr className="border-b">
                 {["Peserta", "Kampus", "Mulai", "Hari ini", "Masuk", "Kehadiran", ""].map((h, i) => (
-                  <th key={i} className={`px-4 py-2.5 font-normal ${i === 5 ? "text-right" : "text-left"}`}>
+                  // Kolom nama tetap terlihat saat tabel digeser ke samping di HP.
+                  <th key={i} className={cn("px-4 py-2.5 font-normal", i === 5 ? "text-right" : "text-left", i === 0 && "sticky left-0 z-10 bg-card shadow-[1px_0_0_var(--border)]")}>
                     <KepalaKolom>{h}</KepalaKolom>
                   </th>
                 ))}
@@ -57,22 +60,23 @@ export default async function DaftarPeserta({ searchParams }: PageProps<"/admin/
             <tbody className="divide-y">
               {peserta.map((p) => (
                 <tr key={p.id} className={p.aktif ? undefined : "text-muted-foreground"}>
-                  <td className="px-4 py-3">
+                  <td className="sticky left-0 z-10 bg-card shadow-[1px_0_0_var(--border)] px-4 py-3">
                     <Link href={`/admin/peserta/${p.id}`} className="group flex items-center gap-3">
                       <Inisial nama={p.nama} />
                       <span className="min-w-0">
                         <span className="block font-medium group-hover:text-primary">{p.nama}</span>
-                        <span className="block truncate text-xs text-muted-foreground">{p.email}</span>
+                        {/* Di HP email disembunyikan supaya kolom nama yang menempel tidak memakan separuh layar. */}
+                        <span className="hidden truncate text-xs text-muted-foreground sm:block">{p.email}</span>
                       </span>
                     </Link>
                   </td>
-                  <td className="px-4">
+                  <td className="min-w-44 px-4 py-3">
                     {p.kampus}
                     {p.role && <span className="block text-xs text-muted-foreground">{p.role}</span>}
                   </td>
-                  <td className="px-4 tabular-nums">{p.tanggalMulai ? formatTanggalPendek(p.tanggalMulai) : "–"}</td>
+                  <td className="px-4 whitespace-nowrap tabular-nums">{p.tanggalMulai ? formatTanggalPendek(p.tanggalMulai) : "–"}</td>
                   <td className="px-4">{p.aktif ? <LencanaStatus kode={p.kode} menitTerlambat={p.absensi?.menitTerlambat} /> : <span className="text-xs font-semibold">Nonaktif</span>}</td>
-                  <td className="px-4 tabular-nums">{formatJam(p.absensi?.jamMasuk)}</td>
+                  <td className="px-4 whitespace-nowrap tabular-nums">{formatJam(p.absensi?.jamMasuk)}</td>
                   <td className="px-4 text-right tabular-nums">{p.rekap.persenKehadiran !== null ? `${p.rekap.persenKehadiran}%` : "–"}</td>
                   <td className="px-4 text-right">
                     <TombolStatusPeserta id={p.id} aktif={p.aktif} nama={p.nama} />
@@ -81,7 +85,7 @@ export default async function DaftarPeserta({ searchParams }: PageProps<"/admin/
               ))}
             </tbody>
           </table>
-        </div>
+        </GulirSamping>
       )}
     </div>
   );

@@ -190,3 +190,22 @@
     animation: none;
   }
 }
+
+/*
+ * Tabel lebar di layar sempit: bisa digeser ke samping, dan tepi kanannya
+ * diberi bayangan tipis selama masih ada kolom yang tersembunyi.
+ * Lapisan pertama (attachment local) ikut bergeser bersama isi tabel dan
+ * menutupi bayangan saat tabel sudah digeser sampai ujung.
+ */
+.gulir-x {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  background-image:
+    linear-gradient(to left, var(--card) 45%, transparent),
+    linear-gradient(to left, color-mix(in oklab, var(--foreground) 14%, transparent), transparent);
+  background-position: right center, right center;
+  background-size: 2.5rem 100%, 0.85rem 100%;
+  background-repeat: no-repeat;
+  background-attachment: local, scroll;
+}

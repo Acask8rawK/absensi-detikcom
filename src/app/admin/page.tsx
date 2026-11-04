@@ -5,6 +5,7 @@ import { dataDashboard } from "@/lib/data";
 import { formatJam, formatTanggal, formatTanggalSedang, tanggalWIB } from "@/lib/waktu";
 import { GrafikKehadiran } from "@/components/admin/grafik";
 import { TombolTinjau } from "@/components/admin/tinjau";
+import { GulirSamping } from "@/components/gulir-samping";
 import { KartuPengajuan } from "@/components/kartu-pengajuan";
 import { BarisAngka, BlokKetidakhadiran, Inisial, KepalaKolom, TulisanPeserta } from "@/components/rapor";
 import { LencanaStatus } from "@/components/status";
@@ -81,12 +82,12 @@ export default async function DashboardAdmin() {
 
       <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
         <Panel judul="Peserta hari ini" keterangan={<Link href="/admin/peserta" className="text-primary hover:underline">Lihat semua</Link>}>
-          <div className="-mx-4 overflow-x-auto sm:-mx-5">
+          <GulirSamping className="-mx-4 sm:-mx-5">
             <table className="w-full min-w-[560px] text-sm">
               <thead>
                 <tr className="border-b">
-                  {["Nama", "Masuk", "Pulang", "Status", "Logbook terakhir"].map((h) => (
-                    <th key={h} className="px-4 pb-2 text-left font-normal sm:first:pl-5">
+                  {["Nama", "Masuk", "Pulang", "Status", "Logbook terakhir"].map((h, i) => (
+                    <th key={h} className={`px-4 pb-2 text-left font-normal sm:first:pl-5 ${i === 0 ? "sticky left-0 z-10 bg-card shadow-[1px_0_0_var(--border)]" : ""}`}>
                       <KepalaKolom>{h}</KepalaKolom>
                     </th>
                   ))}
@@ -95,14 +96,14 @@ export default async function DashboardAdmin() {
               <tbody className="divide-y">
                 {d.hariIniPeserta.map((p) => (
                   <tr key={p.id}>
-                    <td className="px-4 py-2.5 sm:pl-5">
+                    <td className="sticky left-0 z-10 bg-card shadow-[1px_0_0_var(--border)] px-4 py-2.5 sm:pl-5">
                       <Link href={`/admin/peserta/${p.id}`} className="flex items-center gap-2.5 font-medium hover:text-primary">
                         <Inisial nama={p.nama} className="size-7" />
                         {p.nama}
                       </Link>
                     </td>
-                    <td className="px-4 tabular-nums">{formatJam(p.absensi?.jamMasuk)}</td>
-                    <td className="px-4 tabular-nums">{formatJam(p.absensi?.jamPulang)}</td>
+                    <td className="px-4 whitespace-nowrap tabular-nums">{formatJam(p.absensi?.jamMasuk)}</td>
+                    <td className="px-4 whitespace-nowrap tabular-nums">{formatJam(p.absensi?.jamPulang)}</td>
                     <td className="px-4">
                       <LencanaStatus kode={p.kode} menitTerlambat={p.absensi?.menitTerlambat} />
                     </td>
@@ -113,7 +114,7 @@ export default async function DashboardAdmin() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </GulirSamping>
         </Panel>
 
         <Panel judul="Menunggu persetujuan" keterangan={antrean.length ? `${antrean.length} pengajuan` : undefined}>
