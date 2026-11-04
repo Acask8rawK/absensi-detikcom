@@ -1,6 +1,6 @@
 # Tahap 2 · Desain
 
-Dokumen ini menjadi acuan sebelum menulis kode. Flowchart digambar ulang di draw.io; blok `mermaid` di bawah hanya gambaran bentuknya.
+Dokumen ini menjadi acuan sebelum menulis kode. Gambar setiap diagram ada di folder [`flowchart/`](flowchart/); kode `mermaid` di bawah adalah sumbernya, jadi diagram bisa digambar ulang kapan saja (misalnya di mermaid.live, atau di draw.io lewat Arrange > Insert > Mermaid).
 
 ---
 
@@ -14,17 +14,22 @@ flowchart LR
     PX["proxy.ts<br/>cek token & peran"] --> PG["Halaman<br/>(Server Components)"]
     PX --> SA["Server Actions<br/>check-in, pengajuan, persetujuan"]
     PX --> RH["Route Handler<br/>/api/laporan/csv"]
+    RC["Route Handler<br/>/api/cron/reset-demo"]
   end
+  CR["Vercel Cron<br/>setiap pagi"] --> RC
   PG --> PR["Prisma"]
   SA --> PR
   RH --> PR
+  RC --> PR
   PR --> DB[("Supabase<br/>PostgreSQL")]
 ```
 
 - **Satu aplikasi, satu deploy.** Halaman, aksi, dan API berada di satu proyek Next.js.
 - **Server Components** membaca data langsung lewat Prisma, jadi tidak ada API terpisah untuk menampilkan data.
 - **Server Actions** dipakai untuk semua perubahan data (check-in, pengajuan, persetujuan). Setiap aksi memanggil `wajibPeran()` di baris pertama.
-- **Route Handler** hanya untuk unduhan CSV, karena hasilnya file, bukan halaman.
+- **Route Handler** hanya untuk unduhan CSV (hasilnya file, bukan halaman) dan untuk cron harian yang menyegarkan data demo.
+
+Gambar: `flowchart/arsitektur-awal.png` (versi awal, sebelum cron ditambahkan).
 
 ---
 
@@ -46,18 +51,18 @@ Pengecekan terjadi dua kali: `proxy.ts` mengarahkan URL `/peserta/*` dan `/admin
 
 ---
 
-## 3. Flowchart (digambar di draw.io)
+## 3. Flowchart
 
 ### Simbol yang dipakai
 
-| Simbol draw.io | Arti | Contoh |
+| Simbol | Arti | Contoh |
 | :--- | :--- | :--- |
 | Terminator (oval) | Mulai / selesai | "Mulai", "Selesai" |
 | Process (persegi panjang) | Langkah yang dikerjakan sistem atau pengguna | "Hitung tanggal hari ini (WIB)" |
 | Decision (belah ketupat) | Percabangan Ya/Tidak | "Sudah check-in?" |
 | Data / Input-Output (jajar genjang) | Input dari pengguna atau output ke layar | "Input email & kata sandi" |
 | Database (silinder) | Baca/tulis ke database | "INSERT absensi" |
-| Swimlane | Memisahkan Peserta, Sistem, Admin | FC-4 dan FC-5 |
+| Swimlane | Memisahkan Peserta, Sistem, Database, Admin | FC-4 dan FC-5 (digambar sebagai sequence diagram) |
 
 Tips: tulis label **Ya** dan **Tidak** di setiap panah keluar dari belah ketupat, dan usahakan alur utama lurus ke bawah.
 
@@ -76,7 +81,9 @@ Tips: tulis label **Ya** dan **Tidak** di setiap panah keluar dari belah ketupat
 11. *Decision:* Peran? → **Admin**: ke Dashboard admin · **Peserta**: ke Beranda peserta
 12. **Selesai**
 
-Catatan: pesan di langkah 6 dan 8 sengaja sama, supaya orang lain tidak bisa menebak email mana yang terdaftar.
+Pesan di langkah 6 dan 8 sengaja sama, supaya orang lain tidak bisa menebak email mana yang terdaftar.
+
+Gambar: `flowchart/flowchart-login-RBAC.png`
 
 ```mermaid
 flowchart TD
@@ -109,7 +116,25 @@ flowchart TD
 12. *I/O:* Notifikasi "Check-in berhasil pukul 08.52"
 13. **Selesai**
 
-Poin interview: aturan "satu kali per hari" dijaga oleh **constraint unik di database** (langkah 11), bukan oleh tombol. Dua klik yang hampir bersamaan pun hanya menghasilkan satu baris.
+Aturan "satu kali per hari" dijaga oleh **constraint unik di database** (langkah 11), bukan oleh tombol. Dua klik yang hampir bersamaan pun hanya menghasilkan satu baris.
+
+```mermaid
+flowchart TD
+  A([Mulai]) --> B[Peserta membuka Beranda] --> C[Ambil waktu server dan tanggal WIB]
+  C --> D[(Ambil absensi peserta hari ini)] --> E{Sudah check-in?}
+  E -- Ya --> F[/Tampilkan jam masuk dan tombol Check-out/] --> Z([Selesai])
+  E -- Tidak --> G[/Peserta menekan Check-in/] --> H[Server memeriksa peran Peserta]
+  H --> I{Hari kerja Senin–Jumat?}
+  I -- Tidak --> J[Status Hari libur] --> M[(INSERT absensi)]
+  I -- Ya --> K{Jam sekarang ≤ 09.15?}
+  K -- Ya --> L1[Status Tepat waktu] --> M
+  K -- Tidak --> L2[Status Terlambat dan hitung menit] --> M
+  M --> N{Berhasil tersimpan?}
+  N -- Tidak --> O[/Tampilkan sudah check-in hari ini/] --> Z
+  N -- Ya --> P[/Notifikasi check-in berhasil/] --> Z
+```
+
+Gambar: `flowchart/flowchart-checkin.png`
 
 ### FC-3 · Check-out dan logbook
 
@@ -123,7 +148,20 @@ Poin interview: aturan "satu kali per hari" dijaga oleh **constraint unik di dat
 8. *I/O:* "Check-out berhasil. Kamu bekerja 8 jam 12 menit hari ini."
 9. **Selesai**
 
-Langkah 5 memakai pola yang sama dengan sistem kuota di Kemlu: syarat dan perubahan dalam satu perintah, jadi tidak ada celah di antara "cek" dan "ubah".
+Langkah 5 memakai UPDATE bersyarat: syarat dan perubahan ada dalam satu perintah, jadi tidak ada celah di antara "cek" dan "ubah".
+
+```mermaid
+flowchart TD
+  A([Mulai]) --> B[/Peserta menekan Check-out/] --> C[/Minta logbook minimal 10 karakter/]
+  C --> D{Logbook valid?}
+  D -- Tidak --> E[/Tampilkan pesan validasi/] --> C
+  D -- Ya --> F[Server memeriksa peran Peserta]
+  F --> G[(UPDATE absensi hari ini jika jam pulang masih kosong)] --> H{Ada satu baris berubah?}
+  H -- Tidak --> I[/Pesan belum check-in atau sudah check-out/] --> Z([Selesai])
+  H -- Ya --> J[Hitung durasi kerja] --> K[/Notifikasi check-out berhasil dan durasi/] --> Z
+```
+
+Gambar: `flowchart/flowchart-checkout-logbook.png`
 
 ### FC-4 · Izin / sakit (pakai swimlane Peserta · Sistem · Admin)
 
@@ -133,6 +171,39 @@ Langkah 5 memakai pola yang sama dengan sistem kuota di Kemlu: syarat dan peruba
 | Sistem | 4. *Decision:* Valid? (selesai ≥ mulai, maksimal 14 hari, alasan ≥ 10 karakter, tidak bentrok dengan pengajuan lain yang menunggu/disetujui) → **Tidak**: pesan ke peserta, kembali ke 2 → 5. *Database:* simpan status **Menunggu** |
 | Admin | 6. Buka Persetujuan → 7. *Decision:* Setujui? → **Ya**: status **Disetujui** · **Tidak**: 8. isi alasan penolakan (wajib) → status **Ditolak** |
 | Sistem | 9. *Database:* catat peninjau dan waktunya → 10. Peserta melihat status terbaru; hari yang disetujui dihitung Izin/Sakit di laporan → **Selesai** |
+
+```mermaid
+sequenceDiagram
+  title FC-4 · Pengajuan Izin / Sakit
+  participant P as Peserta
+  participant S as Sistem
+  participant D as Database
+  participant A as Admin
+  P->>S: Buka menu Pengajuan
+  P->>S: Pilih Izin / Sakit
+  P->>S: Isi tanggal mulai, tanggal selesai, alasan
+  P->>S: Kirim pengajuan
+  S->>S: Validasi pengajuan
+  Note over S: Tanggal selesai tidak sebelum tanggal mulai<br/>Maksimal 14 hari<br/>Alasan minimal 10 karakter<br/>Tidak bentrok dengan pengajuan Menunggu/Disetujui
+  alt Tidak valid
+    S-->>P: Tampilkan pesan kesalahan
+  else Valid
+    S->>D: Simpan pengajuan dengan status Menunggu
+    D-->>S: Pengajuan tersimpan
+    S->>A: Tampilkan pengajuan di menu Persetujuan
+    A->>S: Buka, tinjau, pilih Setujui atau Tolak
+    alt Setujui
+      S->>D: Status Disetujui, catat peninjau dan waktu
+    else Tolak (alasan wajib)
+      S->>D: Status Ditolak, simpan catatan admin
+    end
+    D-->>S: Data berhasil diperbarui
+    S-->>P: Tampilkan status dan catatan admin
+  end
+  Note over P,A: Pengajuan yang disetujui dihitung Izin / Sakit di kalender, riwayat, dashboard, dan laporan
+```
+
+Gambar: `flowchart/fcSwimlane-pengajuanIzin.png`
 
 ### FC-5 · Koreksi absensi (pakai swimlane)
 
@@ -144,6 +215,45 @@ Langkah 5 memakai pola yang sama dengan sistem kuota di Kemlu: syarat dan peruba
 | Sistem | 10. Jika disetujui, dalam **satu transaksi**: ubah atau buat absensi tanggal itu dengan jam usulan, hitung ulang statusnya, tandai **Dikoreksi**, ubah status pengajuan jadi **Disetujui** → **Selesai** |
 
 Kenapa satu transaksi: kalau absensi berhasil diubah tapi status pengajuan gagal tersimpan (atau sebaliknya), datanya tidak konsisten. Transaksi membuat keduanya berhasil bersama atau batal bersama.
+
+```mermaid
+sequenceDiagram
+  title FC-5 · Pengajuan Koreksi Absensi
+  participant P as Peserta
+  participant S as Sistem
+  participant D as Database
+  participant A as Admin
+  P->>S: Buka menu Riwayat
+  P->>S: Pilih tanggal berstatus Tidak check-out / Alpa
+  P->>S: Tekan Ajukan koreksi
+  S-->>P: Tampilkan form koreksi
+  P->>S: Isi jam masuk / jam pulang usulan dan alasan
+  P->>S: Kirim pengajuan
+  S->>S: Validasi pengajuan
+  Note over S: Tanggal sudah lewat<br/>Maksimal 7 hari ke belakang<br/>Jam pulang setelah jam masuk<br/>Belum ada koreksi Menunggu di tanggal itu
+  alt Tidak valid
+    S-->>P: Tampilkan pesan kesalahan
+  else Valid
+    S->>D: Simpan koreksi dengan status Menunggu
+    D-->>S: Pengajuan tersimpan
+    S->>A: Tampilkan koreksi di menu Persetujuan
+    A->>S: Buka, tinjau, pilih Setujui atau Tolak
+    alt Tolak (alasan wajib)
+      S->>D: Simpan status Ditolak dan catatan admin
+    else Setujui
+      S->>D: Mulai transaksi
+      S->>D: Buat atau ubah absensi tanggal tersebut
+      S->>D: Hitung ulang status, tandai Dikoreksi
+      S->>D: Ubah pengajuan menjadi Disetujui
+      S->>D: Commit transaksi
+      Note over S,D: Jika satu langkah gagal, semua perubahan di-rollback
+    end
+    D-->>S: Hasil keputusan tersimpan
+    S-->>P: Tampilkan status koreksi dan catatan admin
+  end
+```
+
+Gambar: `flowchart/fcSwimlane-pengajuanKoreksi.png`
 
 ### FC-6 · Penentuan status harian
 
@@ -170,6 +280,8 @@ flowchart TD
 
 Sabtu/Minggu dicek **sebelum** izin. Kalau peserta izin Jumat sampai Senin, yang terhitung izin hanya 2 hari kerja, bukan 4.
 
+Gambar: `flowchart/flowchart-penentuanStatusHarian-revisi.png`
+
 ### FC-7 · Laporan dan unduh CSV
 
 1. **Mulai** → admin membuka Laporan
@@ -181,9 +293,23 @@ Sabtu/Minggu dicek **sebelum** izin. Kalau peserta izin Jumat sampai Senin, yang
 7. *Decision:* Unduh CSV? → **Ya**: buat file CSV (pemisah titik koma, UTF-8 dengan BOM agar langsung rapi di Excel berbahasa Indonesia) → unduh
 8. **Selesai**
 
+```mermaid
+flowchart TD
+  A([Mulai]) --> B[/Admin membuka Laporan/] --> C[/Pilih periode dan kata kunci nama/]
+  C --> D[(Ambil peserta, absensi, dan izin disetujui)]
+  D --> E[Untuk setiap peserta dan tanggal, jalankan FC-6]
+  E --> F[Hitung rekap kehadiran dan jam kerja] --> G[/Tampilkan tabel rekap/] --> H{Unduh CSV?}
+  H -- Tidak --> Z([Selesai])
+  H -- Ya --> I[Buat CSV titik koma, UTF-8 dengan BOM] --> J[/Unduh file CSV/] --> Z
+```
+
+Gambar: `flowchart/flowchart-laporan-unduhcsv.png`
+
 ---
 
 ## 4. ERD
+
+Gambar: `flowchart/erd-revisi.png`
 
 ```mermaid
 erDiagram
