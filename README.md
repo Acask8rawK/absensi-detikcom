@@ -2,7 +2,7 @@
 
 Aplikasi web untuk mencatat kehadiran peserta magang. Peserta melakukan check-in dan check-out setiap hari, admin melihat daftar peserta beserta laporan absensinya.
 
-**Demo:** _(link Vercel)_ · Masuk dengan tombol **Masuk sebagai Peserta demo** atau **Masuk sebagai Admin demo** di halaman login.
+**Demo:** [_(link Vercel)_ ](https://absensimagang-detik.vercel.app/)· Masuk dengan tombol **Masuk sebagai Peserta demo** atau **Masuk sebagai Admin demo** di halaman login.
 
 ## Fitur
 
