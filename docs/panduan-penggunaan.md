@@ -2,7 +2,7 @@
 
 Aplikasi absensi peserta magang. Peserta check-in dan check-out setiap hari, admin memantau kehadiran dan mengunduh laporan.
 
-**Link aplikasi:** [_(link Vercel)_](https://absensi-detikcom.vercel.app/)
+**Link aplikasi:** [_(link Vercel)_](https://absensimagang-detik.vercel.app/))
 
 ## 1. Masuk
 
